@@ -1,0 +1,70 @@
+---
+- hosts: localhost
+  become: true
+  connection: local
+  tasks:
+
+  - name: Install prerequsite packages
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+    - curl
+    - tree
+    - vim
+
+  - name: Add an Apt signing key from Docker
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Work out the distribution
+    command: lsb_release -sc
+    register: result
+
+  - name: Add GNS3 & Docker repositories
+    apt_repository:
+      repo: "{{ item }}"
+      state: present
+    loop:
+    - ppa:gns3/ppa
+    - deb [arch=amd64] https://download.docker.com/linux/ubuntu  {{ result.stdout }} stable
+
+  - name: Remove legacy packages
+    apt:
+      name: "{{ item }}"
+      state: absent
+    loop:
+    - docker
+    - docker-engine
+    - docker.io
+
+  - name: Update the apt repository cache
+    apt:
+      update_cache: yes
+
+  - name: Install GNS3 packages
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+    - gns3-gui
+    - gns3-server
+    - xtightvncviewer
+    - vim
+    - konsole
+    - apt-transport-https
+    - ca-certificates
+    - docker-ce
+    - python3-venv
+    - nodejs
+
+  - name: Install Cisco DevNet packages
+    snap:
+      name: "{{ item }}"
+      classic: yes
+    loop:
+    - atom
+    - code
+    - postman
+    - ngrok
